@@ -1,4 +1,4 @@
-from flask import Response, Flask, jsonify, json
+from flask import Response, Flask, jsonify, json, request
 
 app = Flask(__name__)
 
@@ -23,18 +23,17 @@ def ibns_list():
 
 @app.route("/ibns/<isbn>", methods = ['GET'])
 def books_inf(isbn = None):
-    result_list =[]
+
     for i in data['books']:
         a = i['isbn']
         if a == isbn:
-            result_list.append(i)
-    if len(result_list)> 0:
-        return json.dumps(result_list)
-    else:
-        message={'status': 404,'message': 'Not Found book wiht isbn = '+ isbn}
-        resp = jsonify(message)
-        resp.status_cod =404
-        return resp
+            return jsonify(i)
+
+        else:
+            message={'status': 404,'message': 'Not Found book wiht isbn = '+ isbn}
+            resp = jsonify(message)
+            resp.status_code =404
+            return resp
 
 
 @app.route("/authors/<expression>", methods = ['GET'])
@@ -47,29 +46,33 @@ def author_list(expression = None):
         else:
             pass
 
-    result_total = json.dumps(result_list)
-    if len(result_list)> 0:
-        return result_total
+
+    if len(result_list) > 0:
+        response = {'authors': result_list}
     else:
-        message={'Not Found book wiht this expression = '+ expression}
+        response = {'message': 'Not Found book with this expression = ' + expression}
 
-        return message
+    return jsonify(response)
 
 
 
-@app.route('/isbns/<isbn>/publisher=<xyz>', methods=['PUT'])
-def edit_publisher(isbn =None, xyz =None):
-    succes_change = []
-    for i in data['books']:
-        a = i['isbn']
-        if a == isbn:
-            i['published'] = xyz
+@app.route('/ibns/<isbn>', methods=['PUT'])
+def edit_publisher(isbn=None):
+    print(request.args)
+    if "publisher" in request.args:
+        pub = request.args['publisher']
+        succes_change = []
+        for i in data['books']:
+            a = i['isbn']
+            if a == isbn:
+                i['publisher'] = pub
 
-            succes_change.append(isbn)
-    if len(succes_change) > 0:
-        message = {'message': 'Succes! = ' + str(isbn)}
-        return message
-
-    else:
-        message = {'message': 'Not Found book wiht isbn = ' + str(isbn)}
-        return message
+                succes_change.append(isbn)
+        if len(succes_change) > 0:
+            message = {'message': 'Succes!' }
+            response_put ='Succes!'
+            return response_put
+        else:
+            message = {'message': 'Not Found book with isbn = ' + str(isbn)}
+            response_put = 'Not Found book with isbn = ' + str(isbn)
+            return response_put
